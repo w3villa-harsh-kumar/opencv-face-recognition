@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import VideoInputForm from "./components/VideoInputForm";
 import VideoStream from "./components/VideoStream";
+import ListUI from "./components/ListUI";
+import "./styles/Listui.css";
 
 const App = () => {
     const [streamUrl, setStreamUrl] = useState("");
@@ -23,6 +25,9 @@ const App = () => {
                 setInputValue={setInputValue}
             />}
             {streamUrl && <VideoStream streamUrl={streamUrl} />}
+
+            <ListUI/>
+
         </div>
     );
 };
