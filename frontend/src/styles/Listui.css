@@ -4,12 +4,13 @@
     display: flex;
     justify-content: center;
     margin-top: 50px;
-    height: 30vh;
-    background-color: rgb(255, 255, 255);
+    height: auto;
+    /* background-color: rgb(255, 255, 255); */
 }
 table {
     width: 70%;
     border-collapse: collapse;
+    height: 40vh;
     margin-top: 20px;
 }
 th{
@@ -23,9 +24,12 @@ th{
     padding: 8px;
 }
 th {
-    background-color: #b6b2b2;
+    background-color: #92bbe2;
 }
 tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+tr:nth-child(odd) {
     background-color: #f9f9f9;
 }
 h2 {
