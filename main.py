@@ -110,7 +110,7 @@ async def detect_and_label_faces(frame):
                 face_timestamps[face_id] = time.time()
             else:
                 # If no match was found, save the new face
-                if time.time() - face_timestamps["new_face"] > 5:
+                if time.time() - face_timestamps["new_face"] > 10:
                     face_id = await asyncio.get_event_loop().run_in_executor(executor, save_face, face_encoding, frame, top, right, bottom, left)
                     face_timestamps["new_face"] = time.time()
                 else:
@@ -133,24 +133,32 @@ async def detect_and_label_faces(frame):
 
 async def generate_frames(camera_index=None, rtsp_url=None):
     if camera_index is not None:
-        cap = cv2.VideoCapture(int(camera_index))
+        video_capture = cv2.VideoCapture(int(camera_index))
     else:
-        cap = cv2.VideoCapture(rtsp_url)
+        video_capture = cv2.VideoCapture(rtsp_url)
     
     while True:
-        ret, frame = cap.read()
+        ret, frame = video_capture.read()
+        
         if not ret:
+            print("Error: Unable to read frame from video stream.")
             break
-
-        # You can add your face recognition and labeling code here
-
+        
+        print("Frame captured successfully.")
+        
+        frame = await detect_and_label_faces(frame)
+        
         ret, buffer = cv2.imencode('.jpg', frame)
+        if not ret:
+            print("Error: Unable to encode frame.")
+            continue
+        
         frame = buffer.tobytes()
-
+        
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-    cap.release()
+    
+    video_capture.release()  
 
 from pydantic import BaseModel
 class StreamRequest(BaseModel):
