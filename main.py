@@ -160,25 +160,6 @@ async def generate_frames(camera_index=None, rtsp_url=None):
     
     video_capture.release()  
 
-from pydantic import BaseModel
-class StreamRequest(BaseModel):
-    inputType: str
-    inputValue: str
-    
-@app.post('/start_stream')
-async def start_stream(request: StreamRequest):
-  try:
-      input_type = request.inputType
-      input_value = request.inputValue
-      
-      if input_type not in ["camera", "rtsp"]:
-          raise HTTPException(status_code=400, detail="Invalid input type")
-
-      stream_url = f"http://localhost:8000/video_feed?input_type={input_type}&input_value={input_value}"
-      return {"streamUrl": stream_url}
-  except Exception as e:
-      raise HTTPException(status_code=500, detail=str(e))
-
 @app.get('/video_feed')
 async def video_feed(request: Request):
     input_type = request.query_params.get('input_type')
