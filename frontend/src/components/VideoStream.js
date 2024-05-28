@@ -1,9 +1,12 @@
+import React from 'react';
+import './style.css';
+
 const VideoStream = ({ streamUrl }) => {
   console.log(streamUrl);
   return (
-    <div>
-      <h1>Live Video Feed</h1>
-       <img src={streamUrl} alt="Live Feed" width="720" height="480" />
+    <div className="video-container">
+      <h1>Live Video Feeds</h1>
+      <img src={streamUrl} alt="Live Feed" width="720" height="480" />
     </div>
   );
 };

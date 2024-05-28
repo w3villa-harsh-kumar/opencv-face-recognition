@@ -110,7 +110,7 @@ async def detect_and_label_faces(frame):
                 face_timestamps[face_id] = time.time()
             else:
                 # If no match was found, save the new face
-                if time.time() - face_timestamps["new_face"] > 10:
+                if time.time() - face_timestamps["new_face"] > 5:
                     face_id = await asyncio.get_event_loop().run_in_executor(executor, save_face, face_encoding, frame, top, right, bottom, left)
                     face_timestamps["new_face"] = time.time()
                 else:
