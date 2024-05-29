@@ -41,6 +41,7 @@ known_face_ids = []
 # current_id = get_current_ids_count('unknown_faces')
 current_id = 0
 face_id_counter = 0
+# face_save_timestamps = defaultdict(lambda: time.time() - 61)  # Tracks the last save time for each face ID
 new_face_detected = False
 face_timestamps = defaultdict(lambda: time.time() - 61)  # Stores the last time the face was seen
 executor = ThreadPoolExecutor()
@@ -57,59 +58,74 @@ app.add_middleware(
 )
 
 # MongoDB setup
-client = AsyncIOMotorClient("mongodb://localhost:27018")
+client = AsyncIOMotorClient("mongodb://localhost:27017")
 db = client["face_recognition_db"]
 faces_collection = db["faces"]
 
 def is_image_blurry(image, threshold=100.0):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-    return laplacian_var < threshold
+    try:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        return laplacian_var < threshold
+    except Exception as e:
+        print(f"Error checking if image is blurry: {e}")
+        return True  # Treat as blurry if there's an error
 
 async def save_face(face_encoding, frame, top, right, bottom, left):
     global current_id, face_id_counter
-    
-    face_id = f"person_{current_id}"
-    
-    padding = 100
-    top = max(0, top - padding)
-    right = min(frame.shape[1], right + padding)
-    bottom = min(frame.shape[0], bottom + padding)
-    left = max(0, left - padding)
-    
-    face_image = frame[top:bottom, left:right]
-    
-    if is_image_blurry(face_image):
-        print(f"Face image is too blurry to save: {face_id}")
-        return "Blurry"
-    
-    current_id += 1
 
-    face_folder = os.path.join('unknown_faces', face_id)
-    os.makedirs(face_folder, exist_ok=True)
+    try:
+        face_id = f"person_{current_id}"
     
-    image_path = os.path.join(face_folder, f"{face_id_counter}.jpg")
-    cv2.imwrite(image_path, face_image)
-    face_id_counter += 1
+        padding = 100
+        top = max(0, top - padding)
+        right = min(frame.shape[1], right + padding)
+        bottom = min(frame.shape[0], bottom + padding)
+        left = max(0, left - padding)
     
-    known_face_encodings.append(face_encoding)
-    known_face_ids.append(face_id)
+        face_image = frame[top:bottom, left:right]
     
-    face_data = {
+        if is_image_blurry(face_image):
+           print(f"Face image is too blurry to save: {face_id}")
+           return "Blurry"
+    
+        current_id += 1
+
+        current_time = time.time()
+        if current_time - face_timestamps[face_id] < 60:
+            return None  # Skip saving if less than a minute has passed
+
+        face_timestamps[face_id] = current_time
+
+        face_folder = os.path.join('unknown_faces', face_id)
+        os.makedirs(face_folder, exist_ok=True)
+    
+        image_path = os.path.join(face_folder, f"{face_id_counter}.jpg")
+        cv2.imwrite(image_path, face_image)
+        face_id_counter += 1
+    
+        known_face_encodings.append(face_encoding)
+        known_face_ids.append(face_id)
+    
+        face_data = {
         "face_id": face_id,
         "image_path": image_path,
         "encoding": face_encoding.tolist(),
         "timestamp": time.time()
     }
-    await faces_collection.insert_one(face_data)
+        await faces_collection.insert_one(face_data)
     
-    print(f"New face detected and saved with ID: {face_id}")
+        print(f"{time.ctime(current_time)}- New face detected and saved with ID: {face_id}")
     
-    # Broadcast the face detection event
-    await broadcast_face_detection(face_id, face_data["timestamp"])
+        # Broadcast the face detection event
+        await broadcast_face_detection(face_id, face_data["timestamp"])
     
-    return face_id
-
+        return face_id
+            
+    except Exception as e:
+        print(f"Error saving face: {e}")
+        return None
+  
 async def detect_and_label_faces(frame):
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     face_locations = await asyncio.get_event_loop().run_in_executor(executor, face_recognition.face_locations, rgb_frame)
@@ -191,7 +207,7 @@ async def video_feed(input_type: str = Query(...), input_value: str = Query(...)
         raise HTTPException(status_code=400, detail="Invalid input type")
 
 def serialize_face(face):
-    base_server_url = "http://localhost:8000"
+    base_server_url = "http://localhost:3000"
     return {
         "id": str(face["_id"]),
         "face_id": face["face_id"],
