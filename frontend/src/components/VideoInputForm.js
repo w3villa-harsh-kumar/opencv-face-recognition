@@ -1,5 +1,10 @@
 import React from 'react';
 
+function isRtspUrl(url) {
+    const rtspRegex = /^rtsp:\/\/[^\s/$.?#].[^\s]*$/i;
+    return rtspRegex.test(url);
+}
+
 const VideoInputForm = ({ onSubmit, inputType, inputValue, setInputType, setInputValue }) => {
 
   const handleSubmit = async (e) => {
@@ -8,6 +13,12 @@ const VideoInputForm = ({ onSubmit, inputType, inputValue, setInputType, setInpu
       alert('The input field is empty. Please enter a value.');
       return;
     }
+
+    if (inputType === 'rtsp' && !isRtspUrl(inputValue)) {
+      alert('The URL is not a valid RTSP URL.');
+      return;
+    }
+
     try {
       onSubmit(inputType, inputValue);
     } catch (error) {
