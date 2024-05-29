@@ -1,0 +1,7 @@
+opencv-contrib-python
+opencv-python
+face_recognition
+fastapi
+uvicorn
+pymongo
+motor
