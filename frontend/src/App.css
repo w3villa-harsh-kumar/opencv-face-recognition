@@ -3,7 +3,7 @@ body {
   padding: 0;
   font-family: Arial, sans-serif;
   position: relative;
-  height: 1400px;
+  min-height: 100vh;
 }
 
 body::before {
@@ -24,10 +24,11 @@ body::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
-
 
 .form-wrapper {
   display: flex;
@@ -38,11 +39,10 @@ body::before {
 .form-container {
   margin-top: 10px;
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 40px;
+  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 500px;
-  height: 150px;
   width: 100%;
   text-align: center;
 }
@@ -82,82 +82,81 @@ body::before {
   background-color: #0056b3;
 }
 
-
 /* live feed part */
+
 .video-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: auto;
-  height: 1400px;
-  padding-top: 50px;
-  padding-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .video-container h1 {
-  font-size:50px;
+  font-size: 3rem;
   color: #00f7ff;
   margin: 30px 0;
+  text-align: center;
 }
 
 .video-container img {
-  color: rgb(0, 255, 170);
   border: 5px solid #007bff;
   border-radius: 10px;
-  height: 450px;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.322);
 }
 
-
-
 @media screen and (max-width: 850px) {
   .video-container img {
-    height: 400px;
-    width: 600px;
+    max-width: 600px;
   }
-
-} 
+}
 
 @media screen and (max-width: 650px) {
-.video-container img {
-  height: 340px;
-  width: 500px;
+  .video-container img {
+    max-width: 100%;
+  }
 }
 
-} 
+
+/*table*/
 
 
-.table-container{
-    display: flex;
-    justify-content: center;
-    margin-top: 50px;
-    height: auto;
+.table-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
 }
+
 table {
-    width: 1400px;
-    border-collapse: collapse;
-    height: 40vh;
-    margin-top: 20px;
+  width: 100%;
+  max-width: 1400px;
+  border-collapse: collapse;
 }
-th{
-    border: 1px solid #a19e9e;
-    text-align: center;
-    padding: 8px;   
+
+th, td {
+  border: 1px solid #a19e9e;
+  text-align: center;
+  padding: 8px;
 }
- td {
-    border: 1px solid #dddddd;
-    text-align: center;
-    padding: 8px;
-}
+
 th {
-    background-color: #92bbe2;
+  background-color: #92bbe2;
 }
+
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
+
 tr:nth-child(odd) {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
+
 h2 {
-    color: #333;
+  color: #333;
 }
