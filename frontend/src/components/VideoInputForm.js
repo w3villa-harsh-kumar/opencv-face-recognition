@@ -5,6 +5,10 @@ const VideoInputForm = ({ onSubmit, inputType, inputValue, setInputType, setInpu
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!inputValue) {
+      alert('The input field is empty. Please enter a value.');
+      return;
+    }
     try {
       onSubmit(inputType, inputValue);
     } catch (error) {
@@ -19,7 +23,7 @@ const VideoInputForm = ({ onSubmit, inputType, inputValue, setInputType, setInpu
           <label>
             <input
               type="radio"
-              value="camera"
+              value="camera"  
               checked={inputType === 'camera'}
               onChange={() => setInputType('camera')}
             />
