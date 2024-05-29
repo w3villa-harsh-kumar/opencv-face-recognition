@@ -70,7 +70,6 @@ async def save_face(face_encoding, frame, top, right, bottom, left):
     global current_id, face_id_counter
     
     face_id = f"person_{current_id}"
-    current_id += 1
     
     padding = 100
     top = max(0, top - padding)
@@ -83,6 +82,8 @@ async def save_face(face_encoding, frame, top, right, bottom, left):
     if is_image_blurry(face_image):
         print(f"Face image is too blurry to save: {face_id}")
         return "Blurry"
+    
+    current_id += 1
 
     face_folder = os.path.join('unknown_faces', face_id)
     os.makedirs(face_folder, exist_ok=True)
