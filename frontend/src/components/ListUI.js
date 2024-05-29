@@ -1,73 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 
 const ListUI = () => {
+  const [faces, setFaces] = useState([]);
 
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8765');
+
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'face_detection') {
+        setFaces(prevFaces => [...prevFaces, {
+          id: faces.length + 1,
+          face_id: message.face_id,
+          timestamp: new Date(message.timestamp * 1000).toLocaleString()
+        }]);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   return (
     <div className="table-container">
-
-
       <table>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Check In</th>
-            <th>Check Out</th>
+            <th>Face ID</th>
+            <th>Timestamp</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>John Doe</td>
-            <td>2024-05-01 09:00:00</td>
-            <td>2024-05-01 17:00:00</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Jane Smith</td>
-            <td>2024-05-02 09:15:00</td>
-            <td>2024-05-02 16:45:00</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Mike Johnson</td>
-            <td>2024-05-03 08:45:00</td>
-            <td>2024-05-03 17:15:00</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>Emily Davis</td>
-            <td>2024-05-04 09:30:00</td>
-            <td>2024-05-04 16:30:00</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>Emily Davis</td>
-            <td>2024-05-04 09:30:00</td>
-            <td>2024-05-04 16:30:00</td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>Emily Davis</td>
-            <td>2024-05-04 09:30:00</td>
-            <td>2024-05-04 16:30:00</td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>Emily Davis</td>
-            <td>2024-05-04 09:30:00</td>
-            <td>2024-05-04 16:30:00</td>
-          </tr>
+          {faces.map(face => (
+            <tr key={face.id}>
+              <td>{face.id}</td>
+              <td>{face.face_id}</td>
+              <td>{face.timestamp}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
-
     </div>
-
   );
 };
-
-
-
 
 export default ListUI;

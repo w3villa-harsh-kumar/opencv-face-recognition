@@ -1,5 +1,4 @@
 import React from 'react';
-import './style.css';
 
 const VideoInputForm = ({ onSubmit, inputType, inputValue, setInputType, setInputValue }) => {
 

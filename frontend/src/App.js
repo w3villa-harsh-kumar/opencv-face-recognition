@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import VideoInputForm from "./components/VideoInputForm";
 import VideoStream from "./components/VideoStream";
-import "./styles/Listui.css";
+import './App.css';
 
 const App = () => {
     const [streamUrl, setStreamUrl] = useState("");
@@ -15,7 +15,7 @@ const App = () => {
     };
 
     return (
-        <div>
+        <div className="app-container">
             {!streamUrl && <VideoInputForm
                 onSubmit={handleFormSubmit}
                 inputType={inputType}

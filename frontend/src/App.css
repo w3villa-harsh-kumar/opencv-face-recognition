@@ -1,40 +1,169 @@
-.App {
-  text-align: center;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  position: relative;
+  /* height: 140vh; */
+  height: 1400px;
+  /* overflow: hidden; */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://img.freepik.com/premium-vector/camera-technology-safety-conceptcamera-vector-low-poly-wireframe-mesh-design-dark-blue-background-security-system-cctv-security-concept_387612-1.jpg?w=826') no-repeat center center fixed;
+  background-size: cover;
+  opacity: 0.9;
+  z-index: -1;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  height: 100vh;
+  width: 100%;
+}
+
+
+.form-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.form-container {
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  height: 150px;
+  width: 100%;
+  text-align: center;
+}
+
+.form-container div {
+  margin-bottom: 20px;
+}
+
+.form-container label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.form-container input[type="radio"] {
+  margin-right: 5px;
+}
+
+.form-container input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.form-container button {
+  padding: 10px 20px;
+  background-color: #007bff;
   color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
-.App-link {
-  color: #61dafb;
+.form-container button:hover {
+  background-color: #0056b3;
+}
+
+
+/* live feed part */
+.video-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  height: 1400px;
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+
+.video-container h1 {
+  font-size:50px;
+  color: #00f7ff;
+  margin: 30px 0;
+}
+
+.video-container img {
+  color: rgb(0, 255, 170);
+  border: 5px solid #007bff;
+  border-radius: 10px;
+  /* height: max-content; */
+  height: 450px;
+  /* height: 100%; */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.322);
 }
 
 
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+@media screen and (max-width: 850px) {
+  .video-container img {
+    height: 400px;
+    width: 600px;
   }
-  to {
-    transform: rotate(360deg);
-  }
+
+} 
+
+@media screen and (max-width: 650px) {
+.video-container img {
+  height: 340px;
+  width: 500px;
+}
+
+} 
+
+
+.table-container{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+    height: auto;
+    /* background-color: rgb(255, 255, 255); */
+}
+table {
+    width: 70%;
+    border-collapse: collapse;
+    height: 40vh;
+    margin-top: 20px;
+}
+th{
+    border: 1px solid #a19e9e;
+    text-align: center;
+    padding: 8px;   
+}
+ td {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+}
+th {
+    background-color: #92bbe2;
+}
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+h2 {
+    color: #333;
 }
