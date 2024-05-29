@@ -3,9 +3,7 @@ body {
   padding: 0;
   font-family: Arial, sans-serif;
   position: relative;
-  /* height: 140vh; */
   height: 1400px;
-  /* overflow: hidden; */
 }
 
 body::before {
@@ -106,9 +104,7 @@ body::before {
   color: rgb(0, 255, 170);
   border: 5px solid #007bff;
   border-radius: 10px;
-  /* height: max-content; */
   height: 450px;
-  /* height: 100%; */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.322);
 }
 
@@ -132,15 +128,13 @@ body::before {
 
 
 .table-container{
-    width: 100%;
     display: flex;
     justify-content: center;
     margin-top: 50px;
     height: auto;
-    /* background-color: rgb(255, 255, 255); */
 }
 table {
-    width: 70%;
+    width: 1400px;
     border-collapse: collapse;
     height: 40vh;
     margin-top: 20px;
