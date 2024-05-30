@@ -17,9 +17,6 @@ import asyncio
 from websocket_handler import websocket_handler, broadcast_face_detection
 
 # Create directories if they don't exist
-if not os.path.exists('unknown_faces'):
-    os.makedirs('unknown_faces')
-
 if not os.path.exists('detected_faces'):
     os.makedirs('detected_faces')
 
@@ -38,7 +35,7 @@ def get_current_ids_count(directory_path):
 # Initialize variables
 known_face_encodings = []
 known_face_ids = []
-# current_id = get_current_ids_count('unknown_faces')
+# current_id = get_current_ids_count('detected_faces')
 current_id = 0
 face_id_counter = 0
 new_face_detected = False
@@ -85,7 +82,7 @@ async def save_face(face_encoding, frame, top, right, bottom, left):
     
     current_id += 1
 
-    face_folder = os.path.join('unknown_faces', face_id)
+    face_folder = os.path.join('detected_faces', face_id)
     os.makedirs(face_folder, exist_ok=True)
     
     image_path = os.path.join(face_folder, f"{face_id_counter}.jpg")
@@ -210,7 +207,7 @@ async def get_faces():
         raise HTTPException(status_code=500, detail=str(e))
     
 # Serve static files
-app.mount("/unknown_faces", StaticFiles(directory="unknown_faces"), name="unknown_faces")
+app.mount("/detected_faces", StaticFiles(directory="detected_faces"), name="detected_faces")
 
 async def main(): 
     try:
