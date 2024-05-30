@@ -43,6 +43,7 @@ current_id = 0
 face_id_counter = 0
 new_face_detected = False
 face_timestamps = defaultdict(lambda: time.time() - 61)  # Stores the last time the face was seen
+faces_in_previous_frame = []  # List to store face IDs and their timestamps
 executor = ThreadPoolExecutor()
 
 app = FastAPI()
@@ -57,7 +58,7 @@ app.add_middleware(
 )
 
 # MongoDB setup
-client = AsyncIOMotorClient("mongodb://localhost:27018")
+client = AsyncIOMotorClient("mongodb://localhost:27017")
 db = client["face_recognition_db"]
 faces_collection = db["faces"]
 
@@ -104,6 +105,7 @@ async def save_face(face_encoding, frame, top, right, bottom, left):
     await faces_collection.insert_one(face_data)
     
     print(f"New face detected and saved with ID: {face_id}")
+    # print(face_data)
     
     # Broadcast the face detection event
     await broadcast_face_detection(face_id, face_data["timestamp"])
@@ -144,12 +146,21 @@ async def detect_and_label_faces(frame):
         
         face_id_str = str(face_id) if face_id is not None else "Unknown"
         face_labels.append(face_id_str)
+        detected_faces.append((face_id_str, time.time()))
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, face_id_str, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
     
+
+
+     # Update faces_in_previous_frame with the detected faces
+    faces_in_previous_frame = detected_faces
+    print("Faces in previous frame:", faces_in_previous_frame)
+    
     return frame
+
+    
 
 
 async def generate_frames(camera_index=None, rtsp_url=None):
@@ -191,7 +202,7 @@ async def video_feed(input_type: str = Query(...), input_value: str = Query(...)
         raise HTTPException(status_code=400, detail="Invalid input type")
 
 def serialize_face(face):
-    base_server_url = "http://localhost:8000"
+    base_server_url = "http://localhost:3000"
     return {
         "id": str(face["_id"]),
         "face_id": face["face_id"],
