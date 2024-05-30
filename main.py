@@ -44,6 +44,7 @@ face_id_counter = 0
 new_face_detected = False
 face_timestamps = defaultdict(lambda: time.time() - 61)  # Stores the last time the face was seen
 faces_in_previous_frame = []  # List to store face IDs and their timestamps
+# faces_in_current_frame = defaultdict(lambda: {'timestamps': []})  # Dict to store face IDs and their timestamps
 executor = ThreadPoolExecutor()
 
 app = FastAPI()
@@ -146,7 +147,11 @@ async def detect_and_label_faces(frame):
         
         face_id_str = str(face_id) if face_id is not None else "Unknown"
         face_labels.append(face_id_str)
-        detected_faces.append((face_id_str, time.time()))
+
+            # Only add recognized faces to detected_faces
+        if face_id_str != "Unknown":
+            detected_faces.append((face_id_str, time.time()))
+        
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
@@ -157,6 +162,23 @@ async def detect_and_label_faces(frame):
      # Update faces_in_previous_frame with the detected faces
     faces_in_previous_frame = detected_faces
     print("Faces in previous frame:", faces_in_previous_frame)
+
+     # Update faces_in_current_frame
+    # for face_id, timestamp in detected_faces:
+    #     if face_id in faces_in_current_frame:
+    #         last_timestamp = faces_in_current_frame[face_id]['timestamps'][-1]
+    #         if timestamp - last_timestamp > 2:
+    #             faces_in_current_frame[face_id]['timestamps'].append(timestamp)
+    #     else:
+    #         faces_in_current_frame[face_id]['timestamps'].append(timestamp)
+    
+    # # Remove faces that are no longer in the frame
+    # current_face_ids = [face_id for face_id, _ in detected_faces]
+    # for face_id in list(faces_in_current_frame.keys()):
+    #     if face_id not in current_face_ids:
+    #         del faces_in_current_frame[face_id]
+    
+    # print("Faces in current frame:", faces_in_current_frame)
     
     return frame
 
