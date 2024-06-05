@@ -65,7 +65,7 @@ while True:
     cv2.imshow("Face", img)
     
     # Break the loop after 20 images have been taken
-    if sampleNum >= 20:
+    if sampleNum >= 100:
         break
     
     # Add delay for displaying frames
