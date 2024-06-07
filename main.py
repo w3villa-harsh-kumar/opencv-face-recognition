@@ -57,7 +57,7 @@ app.add_middleware(
 )
 
 # MongoDB setup
-client = AsyncIOMotorClient("mongodb://localhost:27018")
+client = AsyncIOMotorClient("mongodb://localhost:27017")
 db = client["face_recognition_db"]
 faces_collection = db["faces"]
 
@@ -191,7 +191,7 @@ async def video_feed(input_type: str = Query(...), input_value: str = Query(...)
         raise HTTPException(status_code=400, detail="Invalid input type")
 
 def serialize_face(face):
-    base_server_url = "http://localhost:8000"
+    base_server_url = "http://localhost:3000"
     return {
         "id": str(face["_id"]),
         "face_id": face["face_id"],
