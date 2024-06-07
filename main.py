@@ -14,7 +14,15 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 import websockets
 import asyncio
+import csv
 from websocket_handler import websocket_handler, broadcast_face_detection
+
+
+# Load encoded data from 'encoded.csv'
+encodingPath = 'encoded.csv'
+encodeList = []
+names = []
+
 
 # Create directories if they don't exist
 if not os.path.exists('unknown_faces'):
@@ -38,7 +46,7 @@ def get_current_ids_count(directory_path):
 # Initialize variables
 known_face_encodings = []
 known_face_ids = []
-# current_id = get_current_ids_count('unknown_faces')
+current_id = get_current_ids_count('unknown_faces')
 current_id = 0
 face_id_counter = 0
 new_face_detected = False
@@ -57,7 +65,7 @@ app.add_middleware(
 )
 
 # MongoDB setup
-client = AsyncIOMotorClient("mongodb://localhost:27018")
+client = AsyncIOMotorClient("mongodb://localhost:27017")
 db = client["face_recognition_db"]
 faces_collection = db["faces"]
 
@@ -95,6 +103,12 @@ async def save_face(face_encoding, frame, top, right, bottom, left):
     known_face_encodings.append(face_encoding)
     known_face_ids.append(face_id)
     
+    # Append new encoding to encoded.csv
+    with open(encodingPath, 'a', newline='\n') as file:
+        writer = csv.writer(file, delimiter=',')
+        writer.writerow([face_id, list(face_encoding)])
+
+
     face_data = {
         "face_id": face_id,
         "image_path": image_path,
@@ -109,6 +123,62 @@ async def save_face(face_encoding, frame, top, right, bottom, left):
     await broadcast_face_detection(face_id, face_data["timestamp"])
     
     return face_id
+
+def load_encodings():
+    with open(encodingPath, 'r+', newline='\n') as file:
+        records = csv.reader(file, delimiter=',')
+        for row in records:
+            if row[0] == 'Name':
+                continue
+            names.append(row[0])
+            row[1] = row[1][1:-2].split(",")
+            new_l = [float(val) for val in row[1]]
+            encodeList.append(np.asarray(new_l, dtype=np.float32))
+            # known_face_encodings.append(encodeList)
+            print("encode", encodeList)
+
+load_encodings()
+# print(known_face_encodings)
+
+# async def detect_and_label_faces(frame):
+#     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+#     face_locations = await asyncio.get_event_loop().run_in_executor(executor, face_recognition.face_locations, rgb_frame)
+#     face_encodings = await asyncio.get_event_loop().run_in_executor(executor, face_recognition.face_encodings, rgb_frame, face_locations)
+    
+#     face_labels = []
+#     detected_faces = []
+    
+#     for face_encoding, (top, right, bottom, left) in zip(face_encodings, face_locations):
+#         match_found = False
+#         name = "Unknown"
+        
+#         # Compare the new encoding with existing encodings
+#         for known_encoding, known_name in zip(encodeList, names):
+#             match = face_recognition.compare_faces([known_encoding], face_encoding, tolerance=0.5)
+#             if match[0]:
+#                 name = known_name
+#                 match_found = True
+#                 break
+                
+#         if match_found:
+#             # Handle the case where a matching encoding is found
+#             face_id = name  # You can use the name as the ID in this case
+#             color_rectangle = (0, 255, 0)
+#             color_text = (255, 0, 0)
+#             font_scale = min((bottom - top) / 50, 1)
+#         else:
+#             # Handle the case where no matching encoding is found
+#             face_id = await save_face(face_encoding, frame, top, right, bottom, left)
+#             color_rectangle = (0, 0, 255)
+#             color_text = (125, 125, 125)
+#             font_scale = 0.7
+        
+#         face_labels.append(face_id)
+#         cv2.rectangle(frame, (left, top), (right, bottom), color_rectangle, 2)
+#         cv2.rectangle(frame, (left, bottom - 30), (right, bottom), color_rectangle, cv2.FILLED)
+#         cv2.putText(frame, face_id, (left + 10, bottom - 10), cv2.FONT_HERSHEY_COMPLEX, font_scale, color_text, 2)
+    
+#     return frame
 
 async def detect_and_label_faces(frame):
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -151,6 +221,7 @@ async def detect_and_label_faces(frame):
     
     return frame
 
+print("known_faceencodings",known_face_encodings)
 
 async def generate_frames(camera_index=None, rtsp_url=None):
     if camera_index is not None:
@@ -191,7 +262,7 @@ async def video_feed(input_type: str = Query(...), input_value: str = Query(...)
         raise HTTPException(status_code=400, detail="Invalid input type")
 
 def serialize_face(face):
-    base_server_url = "http://localhost:8000"
+    base_server_url = "http://localhost:3000"
     return {
         "id": str(face["_id"]),
         "face_id": face["face_id"],
