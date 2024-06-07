@@ -15,6 +15,8 @@ from bson import ObjectId
 import websockets
 import asyncio
 from websocket_handler import websocket_handler, broadcast_face_detection
+import asyncio
+from collections import deque
 
 # Create directories if they don't exist
 if not os.path.exists('detected_faces'):
@@ -54,7 +56,7 @@ app.add_middleware(
 )
 
 # MongoDB setup
-client = AsyncIOMotorClient("mongodb://localhost:27018")
+client = AsyncIOMotorClient("mongodb://localhost:27017")
 db = client["face_recognition_db"]
 faces_collection = db["faces"]
 
@@ -63,119 +65,122 @@ def is_image_blurry(image, threshold=100.0):
     laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
     return laplacian_var < threshold
 
+    
+
+new_face_queue = deque()
+
+
 async def save_face(face_encoding, frame, top, right, bottom, left):
     global current_id, face_id_counter
-    
+
     face_id = f"person_{current_id}"
-    
+
     padding = 100
     top = max(0, top - padding)
     right = min(frame.shape[1], right + padding)
     bottom = min(frame.shape[0], bottom + padding)
     left = max(0, left - padding)
-    
+
     face_image = frame[top:bottom, left:right]
-    
+
     if is_image_blurry(face_image):
         print(f"Face image is too blurry to save: {face_id}")
         return "Blurry"
-    
+
     current_id += 1
 
     face_folder = os.path.join('detected_faces', face_id)
     os.makedirs(face_folder, exist_ok=True)
-    
+
     image_path = os.path.join(face_folder, f"{face_id_counter}.jpg")
     cv2.imwrite(image_path, face_image)
     face_id_counter += 1
-    
+
     known_face_encodings.append(face_encoding)
     known_face_ids.append(face_id)
-    
+
     face_data = {
         "face_id": face_id,
         "image_path": image_path,
         "encoding": face_encoding.tolist(),
         "timestamp": time.time()
     }
-    await faces_collection.insert_one(face_data)
-    
-    print(f"New face detected and saved with ID: {face_id}")
-    
+
+    # Add the face data to the queue first
+    new_face_queue.append(face_data)
+    print(f"New face data added to the queue: {face_id}")
+
     # Broadcast the face detection event
     await broadcast_face_detection(face_id, face_data["timestamp"])
-    
+
     return face_id
 
 async def detect_and_label_faces(frame):
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     face_locations = await asyncio.get_event_loop().run_in_executor(executor, face_recognition.face_locations, rgb_frame)
     face_encodings = await asyncio.get_event_loop().run_in_executor(executor, face_recognition.face_encodings, rgb_frame, face_locations)
-    
+
     face_labels = []
     detected_faces = []
-    
+
     for face_encoding, (top, right, bottom, left) in zip(face_encodings, face_locations):
         if known_face_encodings:
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
-            
+
             if matches[best_match_index] and face_distances[best_match_index] < 0.5:
                 face_id = known_face_ids[best_match_index]
                 face_timestamps[face_id] = time.time()
             else:
                 if time.time() - face_timestamps["new_face"] > 5:
                     face_id = await save_face(face_encoding, frame, top, right, bottom, left)
-                    if face_id == "Blurry":
-                        face_id = "Unknown"
-                    face_timestamps["new_face"] = time.time()
+                    if face_id != "Blurry":
+                        face_timestamps["new_face"] = time.time()
                 else:
-                    face_id = "Unknown"
-                    
+                    face_id = None  # Don't label as "Unknown" yet
+
         else:
             face_id = await save_face(face_encoding, frame, top, right, bottom, left)
-            if face_id == "Blurry":
-                face_id = "Unknown"
-            face_timestamps["new_face"] = time.time()
-        
+            if face_id != "Blurry":
+                face_timestamps["new_face"] = time.time()
+
         face_id_str = str(face_id) if face_id is not None else "Unknown"
         face_labels.append(face_id_str)
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, face_id_str, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-    
-    return frame
 
+    return frame
 
 async def generate_frames(camera_index=None, rtsp_url=None):
     if camera_index is not None:
         video_capture = cv2.VideoCapture(int(camera_index))
     else:
         video_capture = cv2.VideoCapture(rtsp_url)
-    
+
     while True:
         ret, frame = video_capture.read()
-        
+
         if not ret:
             print("Error: Unable to read frame from video stream.")
             break
-        
+
         print("Frame captured successfully.")
-        
+
         frame = await detect_and_label_faces(frame)
-        
+
         ret, buffer = cv2.imencode('.jpg', frame)
         if not ret:
             print("Error: Unable to encode frame.")
             continue
-        
+
         frame = buffer.tobytes()
-        
+
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    
+
     video_capture.release()
 
 @app.get('/video_feed')
